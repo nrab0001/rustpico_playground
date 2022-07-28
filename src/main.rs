@@ -15,6 +15,7 @@ use rp_pico::entry;
 
 // GPIO traits
 use embedded_hal::PwmPin;
+use embedded_hal::digital::v2::{InputPin, OutputPin};
 
 // Time handling traits
 use embedded_time::rate::*;
@@ -34,11 +35,6 @@ use rp_pico::hal::pac;
 // higher-level drivers.
 use rp_pico::hal;
 
-// The minimum PWM value (i.e. LED brightness) we want
-const LOW: u16 = 0;
-
-// The maximum PWM value (i.e. LED brightness) we want
-const HIGH: u16 = 25000;
 
 /// Entry point to our bare-metal application.
 ///
@@ -86,33 +82,30 @@ fn main() -> ! {
     // milliseconds)
     let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().integer());
 
-    // Init PWMs
-    let mut pwm_slices = hal::pwm::Slices::new(pac.PWM, &mut pac.RESETS);
 
-    // Configure PWM4
-    let pwm = &mut pwm_slices.pwm4;
-    pwm.set_ph_correct();
-    pwm.enable();
+    let mut segment_pins=(pins.gpio0.into_push_pull_output(),
+                                            pins.gpio1.into_push_pull_output(),
+                                            pins.gpio2.into_push_pull_output(),
+                                            pins.gpio3.into_push_pull_output(),
+                                            pins.gpio4.into_push_pull_output(),
+                                            pins.gpio5.into_push_pull_output(),
+                                            pins.gpio6.into_push_pull_output(),
+                                            pins.gpio7.into_push_pull_output(),
+                                            pins.gpio8.into_push_pull_output(),
+                                            pins.gpio9.into_push_pull_output(),
+                                            pins.gpio10.into_push_pull_output(),
+                                            pins.gpio11.into_push_pull_output()
+    );
 
-    // Output channel B on PWM4 to the LED pin
-    let channel = &mut pwm.channel_b;
-    channel.output_to(pins.led);
+    segment_pins.5.set_low().unwrap();
+    segment_pins.7.set_high().unwrap();
+    segment_pins.8.set_high().unwrap();
+    segment_pins.11.set_high().unwrap();
+
 
     // Infinite loop, fading LED up and down
     loop {
-        // Ramp brightness up
-        for i in (LOW..=HIGH).skip(100) {
-            delay.delay_us(8);
-            channel.set_duty(i);
-        }
-
-        // Ramp brightness down
-        for i in (LOW..=HIGH).rev().skip(100) {
-            delay.delay_us(8);
-            channel.set_duty(i);
-        }
-
-        delay.delay_ms(500);
+        segment_pins.0.set_high().unwrap();
     }
 }
 
