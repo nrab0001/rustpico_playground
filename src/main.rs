@@ -16,6 +16,7 @@ use rp_pico::entry;
 // GPIO traits
 use embedded_hal::PwmPin;
 use embedded_hal::digital::v2::{InputPin, OutputPin};
+use rp2040_hal::gpio::DynPin;
 
 // Time handling traits
 use embedded_time::rate::*;
@@ -82,30 +83,53 @@ fn main() -> ! {
     // milliseconds)
     let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().integer());
 
+    let mut led=pins.led.into_push_pull_output();
 
-    let mut segment_pins=(pins.gpio0.into_push_pull_output(),
-                                            pins.gpio1.into_push_pull_output(),
-                                            pins.gpio2.into_push_pull_output(),
-                                            pins.gpio3.into_push_pull_output(),
-                                            pins.gpio4.into_push_pull_output(),
-                                            pins.gpio5.into_push_pull_output(),
-                                            pins.gpio6.into_push_pull_output(),
-                                            pins.gpio7.into_push_pull_output(),
-                                            pins.gpio8.into_push_pull_output(),
-                                            pins.gpio9.into_push_pull_output(),
-                                            pins.gpio10.into_push_pull_output(),
-                                            pins.gpio11.into_push_pull_output()
-    );
+    let mut segment_pins: [DynPin; 8] =
+        [pins.gpio10.into(),
+        pins.gpio6.into(),
+        pins.gpio3.into(),
+        pins.gpio1.into(),
+        pins.gpio0.into(),
+        pins.gpio9.into(),
+        pins.gpio4.into(),
+        pins.gpio2.into()];
 
-    segment_pins.5.set_low().unwrap();
-    segment_pins.7.set_high().unwrap();
-    segment_pins.8.set_high().unwrap();
-    segment_pins.11.set_high().unwrap();
+    let mut display_select_pins: [DynPin; 4] =
+        [pins.gpio11.into(),
+        pins.gpio8.into(),
+        pins.gpio7.into(),
+        pins.gpio5.into(),
+        ];
 
+    // Turn pins into push pull outputs
+    for pin in segment_pins.iter_mut() {
+        pin.into_push_pull_output();
+    }
+    led.set_high();
+
+    for pin in display_select_pins.iter_mut() {
+        pin.into_push_pull_output();
+    }
+
+    //set all display to on
+    for pin in display_select_pins.iter_mut() {
+        pin.set_low().unwrap();
+    }
+
+    display_select_pins[0].set_high().unwrap();
 
     // Infinite loop, fading LED up and down
     loop {
-        segment_pins.0.set_high().unwrap();
+        display_select_pins[0].set_low().unwrap();
+        for pin in segment_pins.iter_mut() {
+            pin.set_high().unwrap();
+        }
+        delay.delay_ms(1000);
+        for pin in segment_pins.iter_mut(){
+            pin.set_low().unwrap();
+        }
+        delay.delay_ms(1000)
     }
 }
 

@@ -26,7 +26,7 @@ panic-halt = "0.2.0"
 rp-pico = "0.4"
 
 # If you're not going to use a Board Support Package you'll need these:
-# rp2040-hal = { version="0.5", features=["rt"] }
+ rp2040-hal = { version="0.5", features=["rt"] }
 # rp2040-boot2 = "0.2"
 
 # cargo build/run
